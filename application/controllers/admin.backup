@@ -1,0 +1,132 @@
+<?php
+
+
+/**
+*
+*/
+class Member extends Controller
+{
+
+	public $session;
+	public $s;
+
+	public function __construct(){
+		$this->session = new Session();
+		$this->s = new Standard();
+		if($this->session->get("type") != 1) die("<script>alert('Silahkan Login Terlabih Dahulu!');location.href='".SITE."/login';</script>");
+	}
+
+	public function index(){
+		$gm = $this->model("global_model");
+
+		$gc = $gm->getC();
+
+		$this->view("sections/head");
+		$this->view("pages/admin.dashboard", array("sess" => $this->session));
+		$this->view("sections/sidebar_admin");
+		$this->view("sections/foot");
+
+	}
+
+	public function item(){
+		$gm = $this->model("admin_model");
+
+		if(isset($_GET['i'])){
+			if($_GET['do'] == "del"){
+				if($gm->delitem(array($_GET['i']))) die("<script>alert('Berhasil menghapus barang!');location.href='".SITE."/admin/item';</script>");
+				else die("<script>alert('Gagal menghapus barang!');location.href='".SITE."/admin/item';</script>");
+			}
+		}
+
+		$jumlah = $gm->countItem();
+		$perpage = 5;
+		$limit = $this->s->limit($perpage);
+		$page = $this->s->page($perpage, $jumlah);
+		$get = $gm->getitem($limit);
+
+
+		$this->view("sections/head");
+		$this->view("pages/admin.item", array("jumlah" => $jumlah, "get" => $get));
+		$this->view("sections/sidebar_admin");
+		$this->view("sections/foot");
+	}
+
+	public function add_item(){
+		$gm = $this->model("global_model");
+
+		$gc = $gm->getC();
+
+		$this->view("sections/head");
+		$this->view("pages/admin.add_item", array("sess" => $this->session, "cat" =>$gc));
+		$this->view("sections/sidebar_admin");
+		$this->view("sections/foot");
+	}
+
+	public function do_add_item(){
+		$am = $this->model("admin_model");
+
+		// var_dump($_POST);
+		// echo "<br>";
+		// var_dump($_FILES);
+
+		if($_FILES['image']['name'] != ""){
+			@move_uploaded_file($_FILES['image']['tmp_name'], "assets/".$_FILES['image']['name']);
+			$_POST['image'] = $_FILES['image']['name'];
+		}
+
+		if($am->additem($_POST)) die("<script>alert('Berhasil menambahkan barang!');location.href='".SITE."/admin/item';</script>");
+		else die("<script>alert('Gagal menambahkan barang!');location.href='".SITE."/admin/add_item';</script>");
+	}
+
+	public function detail_item(){
+		$gm = $this->model("admin_model");
+
+		if(!defined("URI3"))
+			die("<script>location.href='".SITE."/admin/item';</script>");
+
+		$get = $gm->getoneitem(URI3);
+
+		$this->view("sections/head");
+		$this->view("pages/admin.detail_item", array("get" => $get[0]));
+		$this->view("sections/sidebar_admin");
+		$this->view("sections/foot");
+	}
+
+	public function edit_item(){
+		$am = $this->model("admin_model");
+		$gm = $this->model("global_model");
+
+		$gc = $gm->getC();
+		if(!defined("URI3"))
+			die("<script>location.href='".SITE."/admin/item';</script>");
+
+		$get = $am->getoneitem(URI3);
+
+		$this->view("sections/head");
+		$this->view("pages/admin.edit_item", array("get" => $get[0], "cat" => $gc));
+		$this->view("sections/sidebar_admin");
+		$this->view("sections/foot");
+
+	}
+
+	public function do_edit_item(){
+		$am = $this->model("admin_model");
+
+		if($_FILES['image']['name'] != ""){
+			@move_uploaded_file($_FILES['image']['tmp_name'], "assets/".$_FILES['image']['name']);
+			$_POST['image'] = $_FILES['image']['name'];
+		}
+
+		if($am->edititem($_POST)) die("<script>alert('Berhasil mengedit barang!');location.href='".SITE."/admin/item';</script>");
+		else die("<script>alert('Gagal mengedit barang!');location.href='".SITE."/admin/edit_item/". $_POST['id'] ."';</script>");
+	}
+	public function item_del(){
+		$gm = $this->model("admin_model");
+		if($gm->delitem($_POST['del'])) die("<script>alert('Berhasil menghapus barang!');location.href='".SITE."/admin/item';</script>");
+		else die("<script>alert('Gagal menghapus barang!');location.href='".SITE."/admin/item';</script>");
+	}
+
+}
+
+
+?>
